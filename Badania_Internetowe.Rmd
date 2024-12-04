@@ -1,0 +1,233 @@
+```{r}
+library(knitr)
+library(survey)
+library(data.table) 
+library(readxl) 
+```
+
+```{r}
+# Tworzenie zmiennych: wiek samochodu, przebieg, klasa samochodu, pojemność silnika
+wiek_samochodu <- sample(1:30, size = 10000, replace = TRUE)
+przebieg_samochodu <- sample(1:550000, size = 10000, replace = TRUE)
+klasa_samochodu <- sample(c("Tanie", "Popularne", "Luksusowe", "Superluksusowe"), size = 10000, replace = TRUE)
+pojemnosc_silnika <- sample(seq(1.0, 4.0, by = 0.2), size = 10000, replace = TRUE)
+
+# Uzależnienie ceny samochodu od jego klasy
+cena_klasa <- ifelse(klasa_samochodu == "Tanie", 0,
+                    ifelse(klasa_samochodu == "Popularne", 50,
+                           ifelse(klasa_samochodu == "Luksusowe", 100,
+                                  ifelse(klasa_samochodu == "Superluksusowe", 300, NA))))
+
+
+# Uzależnienie ceny samochodu od jego wieku
+wiek_cena <- ifelse(wiek_samochodu <= 3, runif(10000, 1000, 5000), runif(10000, 500, 2500))
+
+# Uzależnienie ceny samochodu od jego przebiegu
+przebieg_cena <- ifelse(przebieg_samochodu <= 20000, runif(10000, 1000, 5000), runif(10000, 500, 2500))
+
+# Uzależnienie przebiegu samochodu od jego wieku
+przebieg_od_wieku <- ifelse(przebieg_samochodu <= 20000, runif(10000, 5000, 10000), runif(10000, 10000, 20000))
+
+# Cena auta
+cena <- round(1000 + przebieg_cena * cena_klasa + wiek_cena + przebieg_od_wieku, 2)
+
+# Tabela ze zmiennymi
+samochody <- data.frame(
+  cena = cena,
+  wiek_samochodu = wiek_samochodu,
+  przebieg_samochodu = przebieg_samochodu,
+  klasa_samochodu = klasa_samochodu,
+  pojemnosc_silnika = pojemnosc_silnika
+)
+
+
+
+```
+```{r}
+wynik_wieku_samochodu <- numeric(6)
+
+przedzialy_wiek <- list(c(1, 5), c(6, 10), c(11, 15), c(16, 20), c(21, 25), c(26, 30))
+
+for (i in 1:6) {
+  wynik_wieku_samochodu[i] <- sum(samochody$wiek_samochodu >= przedzialy_wiek[[i]][1] & samochody$wiek_samochodu <= przedzialy_wiek[[i]][2])
+}
+
+wiek <- wynik_wieku_samochodu
+przedzial_wiek <- c("1-5", "6-10", "11-15", "16-20", "21-25", "26-30")
+
+barplot(wiek, names.arg = przedzial_wiek, xlab = "Wiek samochodów", ylab = "Ilość samochodów", main = "Rozkład wieku w populacji", col = "cyan")
+
+
+```
+```{r}
+# Tworzenie przedziałów wiekowych z etykietami
+przedzialy_wieku <- c(1, 5, 10, 15, 20, 25, 30)
+etykiety_wieku <- c("1-5", "6-10", "11-15", "16-20", "21-25", "26-30")
+
+# Zliczanie aut w każdym przedziale wiekowym z etykietami
+liczba_aut_w_wieku <- table(cut(samochody$wiek_samochodu, breaks = przedzialy_wieku, right = FALSE, labels = etykiety_wieku))
+
+# Wyświetlenie wyników
+print(liczba_aut_w_wieku)
+
+```
+
+```{r}
+max_wartosc <- max(cena, na.rm = TRUE)
+min_wartosc <- min(cena, na.rm = TRUE)
+ #wyznacznie max i min w celu zrobienia przedziałów
+
+(max_wartosc)
+(min_wartosc)
+```
+
+```{r}
+wynik_wartosci <- numeric(7)
+
+przedzialy_wartosci <- list(c(0, 10000), c(10001, 20000), c(20001, 50000), c(50001, 100000), c(100001, 200000), c(200001, 300000), c(300001, 400000))
+
+for (i in 1:7) {
+  wynik_wartosci[i] <- sum(samochody$cena >= przedzialy_wartosci[[i]][1] & samochody$cena <= przedzialy_wartosci[[i]][2])
+} 
+
+wartosc <- wynik_wartosci
+przedzial_wartosci <- c("<10", "<20", "<50", "<100", "<200", "<300", "<400")
+
+barplot(wartosc, names.arg = przedzial_wartosci, xlab = "Wartość samochodów", ylab = "Ilość samochodów", main = "Rozkład cen samochodów w tys.", col = "red")
+
+
+```
+```{r}
+# Tworzenie przedziałów cenowych z etykietami
+przedzialy_cen <- c(0, 10000, 20000, 50000, 100000, 200000, 300000, 400000)
+etykiety_cen <- c("<10k", "10k-20k", "20k-50k", "50k-100k", "100k-200k", "200k-300k", "300k-400k")
+
+# Zliczanie aut w każdym przedziale cenowym z etykietami
+liczba_aut <- table(cut(samochody$cena, breaks = przedzialy_cen, right = FALSE, labels = etykiety_cen))
+
+# Wyświetlenie wyników
+print(liczba_aut)
+
+
+```
+
+
+
+```{r}
+# Analiza klasy samochodów
+liczba_klas <- table(samochody$klasa_samochodu)
+
+barplot(liczba_klas, 
+        xlab = "Klasa samochodu", 
+        ylab = "Liczba samochodów",
+        main = "Liczba samochodów dla poszczególnych klas",
+        col = "purple")
+
+
+```
+```{r}
+# Analiza klasy samochodów
+liczba_klas <- table(samochody$klasa_samochodu)
+
+# Wyświetlenie liczby aut w podziale na klasy
+print(liczba_klas)
+
+```
+```{r}
+N <- nrow(samochody)
+N #liczebność populacji
+```
+```{r}
+n <- 500 #liczebność próby
+```
+
+```{r}
+Y <- samochody['cena'] # Zdefiniowanie Y jako cena samochodu
+X1 <- samochody['wiek_samochodu'] # Zdefiniowanie zmiennej ilościowej jako wiek samochodu
+X2 <- samochody['klasa_samochodu'] # Zdefiniowanie pierwszej zmiennej jakościowej jako Klasa samochodu
+
+samochody_xd <- data.frame(Y, X1, X2) # Stworzenie tabeli z potrzebnymi danymi
+samochody_xd # Wyświetlenie tabeli
+
+```
+
+```{r}
+posortowane <- samochody_xd[order(samochody_xd$cena), ]
+posortowane
+
+```
+
+```{r}
+losowanie <- function(N, n) {
+  sample(1:N, n, replace = FALSE)  #zdefiniowanie funkcji losowania bez powtórzeń
+}              
+```
+
+```{r}
+B <- 500 # określenie ilości losowań
+proba_losowa <- list()
+
+for (b in 1:B) {
+  proba_losowa[[b]] <- posortowane[losowanie(N, n), ] # wykonanie losowania na posortowanych danych 
+  print(proba_losowa[[b]])}
+```
+```{r}
+srednia <- mean(samochody_xd$cena)
+srednia #obliczenie średniej prawdziwych wartości ogólnych
+```
+```{r}
+b <- 1
+estymator_naiwny_losowy <- numeric(B)  # Utworzenie wektora do przechowywania estymatorów
+
+for (b in 1:B) { # Wyliczenie estymatorów naiwnych - średniej wartości 
+  estymator_naiwny_losowy[b] <- mean(proba_losowa[[b]]$cena)
+  print(estymator_naiwny_losowy[b])
+}
+```
+```{r}
+ocena_losowe <- data.frame(losowe_oczekiwana = mean(estymator_naiwny_losowy), #ocena średniej z estymatorów
+                     losowe_odchyl = sd(estymator_naiwny_losowy),  # ocena odchylenia estymatorów
+                     losowe_obciazenie = mean(estymator_naiwny_losowy) - srednia, #obciążenie estymatorów
+                     srednia = srednia
+)
+ocena_losowe
+```
+```{r}
+# Post-stratyfikacja
+B <- 500 # Ilość losowań
+wyniki_naiwny <- numeric(B)
+wyniki_ps <- numeric(B)
+total_rows <- nrow(samochody)
+
+klasa_strata <- xtabs(~ klasa_samochodu, data = samochody)
+
+for (b in 1:B) {
+  set.seed(b)
+  nielos_id <- sample(x = 1:total_rows, size = 0.2 * total_rows, prob = samochody$cena / sum(samochody$cena))
+  
+  nielosowa <- samochody[nielos_id, ]
+  wyniki_naiwny[b] <- mean(nielosowa$cena)
+  
+  library(survey)
+  svydes <- svydesign(ids = ~1, data = nielosowa, weights = ~1)
+  svydes_post <- postStratify(svydes, ~ klasa_samochodu, klasa_strata)
+  wyniki_ps[b] <- svymean(~ cena, svydes_post)[1]
+}
+
+wyniki_ps
+
+
+```
+```{r}
+ocena_post <- data.frame(
+  naiwne_oczekiwana = mean(wyniki_naiwny), 
+                     naiwne_odchyl = sd(wyniki_naiwny), 
+                     naiwne_obciazenie = mean(wyniki_naiwny) - srednia,
+                     post_oczekiwana = mean(wyniki_ps), 
+                     post_odchyl = sd(wyniki_ps), 
+                     post_obciazenie = mean(wyniki_ps) - srednia,
+                     srednia = srednia
+)
+ocena_post
+```
+
